@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold vs USD (XAU/USD) Chart</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Use Inter font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Ensure the widget container takes up the available height */
+        #tradingview-widget-container {
+            height: 75vh;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <!-- Header Section -->
+    <header class="bg-gray-900 p-4 shadow-md sticky top-0 z-10">
+        <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
+            <h1 class="text-2xl font-bold text-amber-400 mb-4 sm:mb-0">
+                Gold (XAU/USD) Live Chart
+            </h1>
+            <!-- Timeframe Navigation Buttons -->
+            <nav id="timeframe-nav" class="flex items-center space-x-2 bg-gray-800 p-2 rounded-lg">
+                <button data-path="/1m" data-timeframe="1" class="timeframe-btn px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ease-in-out">1m</button>
+                <button data-path="/5m" data-timeframe="5" class="timeframe-btn px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ease-in-out">5m</button>
+                <button data-path="/1h" data-timeframe="60" class="timeframe-btn px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ease-in-out">1H</button>
+                <button data-path="/1d" data-timeframe="D" class="timeframe-btn px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ease-in-out">1D</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="container mx-auto p-4">
+        <!-- TradingView Widget will be injected here -->
+        <div id="tradingview-widget-container" class="bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
+            <!-- This inner div is the actual target for the widget -->
+            <div id="tradingview-widget" class="h-full w-full"></div>
+        </div>
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="text-center text-gray-500 text-xs p-4">
+        <p>TradingView chart data for XAU/USD. Not financial advice.</p>
+    </footer>
+
+    <!-- TradingView Widget Script -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            const nav = document.getElementById('timeframe-nav');
+            const buttons = nav.querySelectorAll('.timeframe-btn');
+            const widgetContainer = document.getElementById('tradingview-widget');
+
+            let currentWidget = null;
+
+            // --- Function to render the TradingView Widget ---
+            function renderWidget(timeframe) {
+                // Clear any existing widget to prevent duplicates
+                widgetContainer.innerHTML = '';
+                
+                currentWidget = new TradingView.widget({
+                    "autosize": true,
+                    "symbol": "OANDA:XAUUSD",
+                    "interval": timeframe,
+                    "timezone": "Etc/UTC",
+                    "theme": "dark",
+                    "style": "1",
+                    "locale": "en",
+                    "toolbar_bg": "#f1f3f6",
+                    "enable_publishing": false,
+                    "withdateranges": true,
+                    "hide_side_toolbar": false,
+                    "allow_symbol_change": true,
+                    "container_id": "tradingview-widget"
+                });
+            }
+
+            // --- Function to update button styles ---
+            function updateButtonStyles(activeTimeframe) {
+                buttons.forEach(button => {
+                    if (button.dataset.timeframe === activeTimeframe) {
+                        button.classList.add('bg-amber-500', 'text-gray-900', 'shadow-lg');
+                        button.classList.remove('bg-gray-700', 'text-gray-300', 'hover:bg-gray-600');
+                    } else {
+                        button.classList.remove('bg-amber-500', 'text-gray-900', 'shadow-lg');
+                        button.classList.add('bg-gray-700', 'text-gray-300', 'hover:bg-gray-600');
+                    }
+                });
+            }
+
+            // --- Function to handle routing and rendering ---
+            function handleRouteChange() {
+                const path = window.location.pathname;
+                let timeframe = 'D'; // Default to 1 Day
+
+                switch (path) {
+                    case '/1m':
+                        timeframe = '1';
+                        break;
+                    case '/5m':
+                        timeframe = '5';
+                        break;
+                    case '/1h':
+                        timeframe = '60';
+                        break;
+                    case '/1d':
+                        timeframe = 'D';
+                        break;
+                }
+                
+                renderWidget(timeframe);
+                updateButtonStyles(timeframe);
+            }
+
+            // --- Event Listeners ---
+
+            // 1. Handle clicks on timeframe buttons
+            nav.addEventListener('click', (e) => {
+                if (e.target.classList.contains('timeframe-btn')) {
+                    const path = e.target.dataset.path;
+                    const timeframe = e.target.dataset.timeframe;
+
+                    // Update URL without reloading the page
+                    window.history.pushState({ path }, '', path);
+                    
+                    // Render the new widget and update styles
+                    renderWidget(timeframe);
+                    updateButtonStyles(timeframe);
+                }
+            });
+
+            // 2. Handle browser back/forward navigation
+            window.addEventListener('popstate', handleRouteChange);
+
+            // 3. Initial load: render the widget based on the current URL
+            handleRouteChange();
+        });
+    </script>
+
+</body>
+</html>
+
